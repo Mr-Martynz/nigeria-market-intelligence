@@ -2,8 +2,14 @@ name: Daily Exchange Rate Fetch
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # runs every day at 7am UTC (8am Nigeria time)
-  workflow_dispatch:       # also lets you run it manually from GitHub
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   fetch-rates:
@@ -12,6 +18,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,4 +47,4 @@ jobs:
           git config user.name "GitHub Action"
           git add data/
           git diff --staged --quiet || git commit -m "auto: daily fetch $(date +%Y-%m-%d)"
-          git push
+          git push origin master
