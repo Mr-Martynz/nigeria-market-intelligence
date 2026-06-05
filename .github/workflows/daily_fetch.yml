@@ -1,0 +1,41 @@
+name: Daily Exchange Rate Fetch
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # runs every day at 7am UTC (8am Nigeria time)
+  workflow_dispatch:       # also lets you run it manually from GitHub
+
+jobs:
+  fetch-rates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch exchange rates
+        run: python src/fetch_data.py
+        env:
+          EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
+
+      - name: Clean and process data
+        run: python src/clean_data.py
+
+      - name: Store in database
+        run: python src/database.py
+
+      - name: Commit and push new data
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add data/
+          git diff --staged --quiet || git commit -m "auto: daily fetch $(date +%Y-%m-%d)"
+          git push
