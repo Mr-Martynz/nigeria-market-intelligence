@@ -1,0 +1,2 @@
+date,USD,EUR,GBP,GHS,ZAR,source_file,NGN_per_USD,NGN_per_EUR,NGN_per_GBP,day_of_week,usd_pct_change,usd_7day_avg
+2026-06-05,0.00073497,0.00063458,0.00054832,0.008626,0.01194,rates_20260605_123137.json,1360.6,1575.85,1823.75,Friday,,
