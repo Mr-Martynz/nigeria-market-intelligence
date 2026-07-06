@@ -52,6 +52,7 @@ def create_dashboard(df):
             color="#7F77DD", alpha=0.85, edgecolor="white")
     ax3.set_title("NGN/USD Rate per Day")
     ax3.set_ylabel("N per $1 USD")
+    ax3.set_ylim(bottom=df["ngn_per_usd"].min() * 0.995)
     ax3.tick_params(axis="x", rotation=45)
 
     # ---- Chart 4: All three currencies compared ----
@@ -66,6 +67,7 @@ def create_dashboard(df):
             width=bar_width, label="GBP", color="#D85A30", alpha=0.85)
     ax4.set_title("USD vs EUR vs GBP Comparison")
     ax4.set_ylabel("NGN per 1 unit")
+    ax4.set_ylim(bottom=df[["ngn_per_usd", "ngn_per_eur", "ngn_per_gbp"]].min().min() * 0.895)
     ax4.set_xticks(list(x))
     ax4.set_xticklabels(df["date"].dt.strftime("%d %b"), rotation=45)
     ax4.legend()
