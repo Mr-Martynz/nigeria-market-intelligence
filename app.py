@@ -27,6 +27,8 @@ st.set_page_config(
 # ---- HEADER ----
 st.title("Nigerian Naira Exchange Rate Intelligence")
 st.caption("Helping Nigerian importers decide when to buy foreign currency")
+last_updated = df["date"].max().strftime("%d %B %Y")
+st.caption(f"Last updated: {last_updated}")
 
 st.divider()
 
@@ -111,3 +113,29 @@ if usd_amount > 0:
                   delta=f"{'cheaper' if difference < 0 else 'more expensive'} than last week")
 
 st.divider()
+
+# ---- BUSINESS INSIGHTS ----
+st.subheader("📊 What This Means For Your Business")
+
+# Insight 1 - Weekly trend
+if weekly_change < 0:
+    st.info(f"📉 **The Naira has strengthened {abs(weekly_change):.2f}% this week.** "
+            f"Importing goods is cheaper than it was 7 days ago.")
+else:
+    st.info(f"📈 **The Naira has weakened {weekly_change:.2f}% this week.** "
+            f"Importing goods is more expensive than it was 7 days ago.")
+
+# Insight 2 - Compare today vs monthly average
+diff_from_avg = ((today_rate - monthly_avg) / monthly_avg) * 100
+if diff_from_avg < 0:
+    st.success(f"✅ **Today's rate is {abs(diff_from_avg):.2f}% below the 30-day average.** "
+               f"This is a relatively good time to convert Naira to dollars.")
+else:
+    st.warning(f"⚠️ **Today's rate is {diff_from_avg:.2f}% above the 30-day average.** "
+               f"You are paying more than usual to buy dollars right now.")
+
+# Insight 3 - Best day this month
+best_day = df.loc[df["ngn_per_usd"].idxmin()]
+st.info(f"📅 **The cheapest day to buy dollars this month was "
+        f"{best_day['date'].strftime('%d %B %Y')} at ₦{best_day['ngn_per_usd']:,.2f}.** "
+        f"Compared to today, that's ₦{today_rate - best_day['ngn_per_usd']:,.2f} cheaper per dollar.")
