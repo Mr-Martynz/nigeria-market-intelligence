@@ -17,6 +17,10 @@ def load_data():
 
 df = load_data()
 
+if df.empty:
+    st.error("No exchange rate data available. Please run the data pipeline first.")
+    st.stop()
+
 # ---- PAGE CONFIG ----
 st.set_page_config(
     page_title="NGN Exchange Rate Intelligence",
@@ -61,14 +65,32 @@ st.divider()
 # ---- DECISION CARD ----
 st.subheader("Should You Buy Dollars Today?")
 
-monthly_avg = df["ngn_per_usd"].mean()
+last_30 = df.tail(30)
+monthly_avg = last_30["ngn_per_usd"].mean()
 
+# Calculate trend direction - how many of last 7 days did rate rise?
+last_7 = df.tail(7)
+rising_days = (last_7["ngn_per_usd"].diff() > 0).sum()
+falling_days = (last_7["ngn_per_usd"].diff() < 0).sum()
+
+# Confidence score
+if rising_days >= 5:
+    confidence = "Low confidence"
+    confidence_reason = f"USD has risen {rising_days} of the last 7 days — trend is moving against you"
+elif falling_days >= 5:
+    confidence = "High confidence"
+    confidence_reason = f"USD has fallen {falling_days} of the last 7 days — trend is in your favour"
+else:
+    confidence = "Moderate confidence"
+    confidence_reason = f"USD has risen {rising_days} and fallen {falling_days} of the last 7 days — market is mixed"
+
+# Decision
 if today_rate < monthly_avg:
     st.success(f"✅ TODAY IS A GOOD DAY TO BUY. The current rate (₦{today_rate:,.2f}) is below the 30-day average (₦{monthly_avg:,.2f}). You are buying cheaper than usual.")
 else:
     st.warning(f"⚠️ CONSIDER WAITING. The current rate (₦{today_rate:,.2f}) is above the 30-day average (₦{monthly_avg:,.2f}). You are buying more expensive than usual.")
 
-st.divider()
+st.caption(f"📊 {confidence}: {confidence_reason}.")
 
 # ---- HISTORICAL CHART ----
 st.subheader("How the Naira Has Moved Against the Dollar")
