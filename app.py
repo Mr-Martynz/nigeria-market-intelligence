@@ -130,9 +130,14 @@ if usd_amount > 0:
         st.metric("Cost Today", f"₦{cost_today:,.0f}")
     with col2:
         st.metric("Cost 7 Days Ago", f"₦{cost_week_ago:,.0f}")
+        
+    pct_diff = (difference / cost_week_ago) * 100
+
     with col3:
         st.metric("Difference", f"₦{abs(difference):,.0f}",
-                  delta=f"{'cheaper' if difference < 0 else 'more expensive'} than last week")
+                delta=f"{pct_diff:+.2f}% vs last week",
+                delta_color="inverse")
+        
 
 st.divider()
 
