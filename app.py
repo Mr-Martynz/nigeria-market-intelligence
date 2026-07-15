@@ -95,12 +95,10 @@ st.subheader("Should You Buy Dollars Today?")
 last_30 = df.tail(30)
 monthly_avg = last_30["ngn_per_usd"].mean()
 
-# Calculate trend direction - how many of last 7 days did rate rise?
 last_7 = df.tail(7)
 rising_days = (last_7["ngn_per_usd"].diff() > 0).sum()
 falling_days = (last_7["ngn_per_usd"].diff() < 0).sum()
 
-# Confidence score
 if rising_days >= 5:
     confidence = "Low confidence"
     confidence_reason = f"USD has risen {rising_days} of the last 7 days — trend is moving against you"
@@ -111,7 +109,6 @@ else:
     confidence = "Moderate confidence"
     confidence_reason = f"USD has risen {rising_days} and fallen {falling_days} of the last 7 days — market is mixed"
 
-# Decision
 if today_rate < monthly_avg:
     st.success(f"✅ TODAY IS A GOOD DAY TO BUY. The current rate (₦{today_rate:,.2f}) is below the 30-day average (₦{monthly_avg:,.2f}). You are buying cheaper than usual.")
 else:
@@ -143,12 +140,18 @@ st.divider()
 st.subheader("Import Cost Calculator")
 st.write("How much will your supplier payment cost in Naira?")
 
-usd_amount = st.number_input("Enter USD amount you need to pay:", 
-                              min_value=0.0, value=10000.0, step=500.0)
+currency = st.selectbox("Select currency:", ["USD", "EUR", "GBP"])
 
-if usd_amount > 0:
-    cost_today = usd_amount * today_rate
-    cost_week_ago = usd_amount * week_ago_rate
+rate_column = f"ngn_per_{currency.lower()}"
+today_selected_rate = today[rate_column]
+week_ago_selected_rate = week_ago[rate_column]
+
+amount = st.number_input(f"Enter {currency} amount you need to pay:", 
+                          min_value=0.0, value=10000.0, step=500.0)
+
+if amount > 0:
+    cost_today = amount * today_selected_rate
+    cost_week_ago = amount * week_ago_selected_rate
     difference = cost_today - cost_week_ago
 
     col1, col2, col3 = st.columns(3)
@@ -164,14 +167,12 @@ if usd_amount > 0:
         st.metric("Difference", f"₦{abs(difference):,.0f}",
                 delta=f"{pct_diff:+.2f}% vs last week",
                 delta_color="inverse")
-        
 
 st.divider()
 
 # ---- BUSINESS INSIGHTS ----
 st.subheader("📊 What This Means For Your Business")
 
-# Insight 1 - Weekly trend
 if weekly_change < 0:
     st.info(f"📉 **The Naira has strengthened {abs(weekly_change):.2f}% this week.** "
             f"Importing goods is cheaper than it was 7 days ago.")
@@ -179,7 +180,6 @@ else:
     st.info(f"📈 **The Naira has weakened {weekly_change:.2f}% this week.** "
             f"Importing goods is more expensive than it was 7 days ago.")
 
-# Insight 2 - Compare today vs monthly average
 diff_from_avg = ((today_rate - monthly_avg) / monthly_avg) * 100
 if diff_from_avg < 0:
     st.success(f"✅ **Today's rate is {abs(diff_from_avg):.2f}% below the 30-day average.** "
@@ -188,7 +188,6 @@ else:
     st.warning(f"⚠️ **Today's rate is {diff_from_avg:.2f}% above the 30-day average.** "
                f"You are paying more than usual to buy dollars right now.")
 
-# Insight 3 - Best day this month
 best_day = df.loc[df["ngn_per_usd"].idxmin()]
 st.info(f"📅 **The cheapest day to buy dollars this month was "
         f"{best_day['date'].strftime('%d %B %Y')} at ₦{best_day['ngn_per_usd']:,.2f}.** "
