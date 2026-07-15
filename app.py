@@ -1,18 +1,45 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-
-DB_PATH = "data/market_intelligence.db"
+import glob
+import json
 
 def load_data():
-    with sqlite3.connect(DB_PATH) as conn:
-        df = pd.read_sql_query("""
-            SELECT * FROM exchange_rates
-            ORDER BY date ASC
-        """, conn)
+    files = glob.glob("data/raw/rates_*.json")
+
+    if not files:
+        return pd.DataFrame()
+
+    all_records = []
+    for filepath in files:
+        with open(filepath, "r") as f:
+            raw = json.load(f)
+
+        rates = raw.get("conversion_rates", {})
+        raw_date = raw.get("time_last_update_utc", "")
+        parsed_date = pd.to_datetime(raw_date, format="%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d")
+
+        record = {
+            "date": parsed_date,
+            "USD": rates.get("USD"),
+            "EUR": rates.get("EUR"),
+            "GBP": rates.get("GBP"),
+        }
+        all_records.append(record)
+
+    df = pd.DataFrame(all_records)
     df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    df = df.drop_duplicates(subset="date", keep="last")
+
+    df["ngn_per_usd"] = (1 / df["USD"]).round(2)
+    df["ngn_per_eur"] = (1 / df["EUR"]).round(2)
+    df["ngn_per_gbp"] = (1 / df["GBP"]).round(2)
+    df["day_of_week"] = df["date"].dt.day_name()
+    df["usd_pct_change"] = df["ngn_per_usd"].pct_change().round(4) * 100
+    df["usd_7day_avg"] = df["ngn_per_usd"].rolling(window=7).mean().round(2)
+
     return df
 
 df = load_data()
@@ -130,7 +157,7 @@ if usd_amount > 0:
         st.metric("Cost Today", f"₦{cost_today:,.0f}")
     with col2:
         st.metric("Cost 7 Days Ago", f"₦{cost_week_ago:,.0f}")
-        
+
     pct_diff = (difference / cost_week_ago) * 100
 
     with col3:
