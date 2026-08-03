@@ -5,6 +5,14 @@ import matplotlib.dates as mdates
 import glob
 import json
 
+# ---- PAGE CONFIG ----
+# Must be the very first Streamlit command in the script
+st.set_page_config(
+    page_title="NGN Exchange Rate Intelligence",
+    page_icon="🇳🇬",
+    layout="wide"
+)
+
 def load_data():
     files = glob.glob("data/raw/rates_*.json")
 
@@ -42,18 +50,12 @@ def load_data():
 
     return df
 
-df = load_data()
+with st.spinner("Loading exchange rate data..."):
+    df = load_data()
 
 if df.empty:
     st.error("No exchange rate data available. Please run the data pipeline first.")
     st.stop()
-
-# ---- PAGE CONFIG ----
-st.set_page_config(
-    page_title="NGN Exchange Rate Intelligence",
-    page_icon="🇳🇬",
-    layout="wide"
-)
 
 # ---- HEADER ----
 st.title("Nigerian Naira Exchange Rate Intelligence")
@@ -146,6 +148,8 @@ st.pyplot(fig)
 
 st.caption("💡 When the line is below the red dotted average — that's a cheaper day to buy dollars.")
 
+st.divider()
+
 # ---- IMPORT COST CALCULATOR ----
 st.subheader("Import Cost Calculator")
 st.write("How much will your supplier payment cost in Naira?")
@@ -202,3 +206,20 @@ best_day = df.loc[df["ngn_per_usd"].idxmin()]
 st.info(f"📅 **The cheapest day to buy dollars this month was "
         f"{best_day['date'].strftime('%d %B %Y')} at ₦{best_day['ngn_per_usd']:,.2f}.** "
         f"Compared to today, that's ₦{today_rate - best_day['ngn_per_usd']:,.2f} cheaper per dollar.")
+
+# ---- PERIOD-BASED INSIGHT (matches the selected time range above) ----
+period_max = chart_df["ngn_per_usd"].max()
+period_min = chart_df["ngn_per_usd"].min()
+
+if today_rate >= period_max:
+    st.warning(f"🔺 **This is the highest USD rate in the last {range_option.lower()}.** "
+               f"You're paying the most you have in this period to buy dollars.")
+elif today_rate <= period_min:
+    st.success(f"🔻 **This is the lowest USD rate in the last {range_option.lower()}.** "
+               f"This is the cheapest it's been to buy dollars in this period.")
+else:
+    pct_from_low = ((today_rate - period_min) / period_min) * 100
+    pct_from_high = ((period_max - today_rate) / today_rate) * 100
+    st.info(f"📊 **Today's rate is {pct_from_low:.2f}% above the lowest point in the last "
+            f"{range_option.lower()}** (₦{period_min:,.2f}) and "
+            f"{pct_from_high:.2f}% below the highest (₦{period_max:,.2f}).")
