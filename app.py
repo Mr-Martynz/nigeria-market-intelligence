@@ -119,11 +119,23 @@ st.caption(f"📊 {confidence}: {confidence_reason}.")
 # ---- HISTORICAL CHART ----
 st.subheader("How the Naira Has Moved Against the Dollar")
 
+range_option = st.selectbox(
+    "Time range:",
+    ["7 Days", "30 Days", "90 Days", "1 Year"],
+    index=1
+)
+
+range_days = {"7 Days": 7, "30 Days": 30, "90 Days": 90, "1 Year": 365}[range_option]
+cutoff_date = df["date"].max() - pd.Timedelta(days=range_days)
+chart_df = df[df["date"] >= cutoff_date]
+
+chart_avg = chart_df["ngn_per_usd"].mean()
+
 fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(df["date"], df["ngn_per_usd"], 
+ax.plot(chart_df["date"], chart_df["ngn_per_usd"],
         color="#378ADD", linewidth=2, marker="o", markersize=4)
-ax.axhline(y=monthly_avg, color="#FF6B6B", 
-           linewidth=1.5, linestyle="--", label=f"30-day avg: ₦{monthly_avg:,.2f}")
+ax.axhline(y=chart_avg, color="#FF6B6B",
+           linewidth=1.5, linestyle="--", label=f"{range_option} avg: ₦{chart_avg:,.2f}")
 ax.set_ylabel("₦ per $1 USD")
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
 ax.tick_params(axis="x", rotation=30)
@@ -133,8 +145,6 @@ plt.tight_layout()
 st.pyplot(fig)
 
 st.caption("💡 When the line is below the red dotted average — that's a cheaper day to buy dollars.")
-
-st.divider()
 
 # ---- IMPORT COST CALCULATOR ----
 st.subheader("Import Cost Calculator")
