@@ -141,7 +141,7 @@ ax.axhline(y=chart_avg, color="#FF6B6B",
 ax.set_ylabel("₦ per $1 USD")
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
 ax.tick_params(axis="x", rotation=30)
-ax.legend()
+ax.legend(loc="upper left")
 plt.tight_layout()
 
 st.pyplot(fig)
