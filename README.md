@@ -1,104 +1,84 @@
 # 🇳🇬 Nigerian Naira Exchange Rate Intelligence
 
-**Live app:** https://nigeria-market-intelligence.streamlit.app
+**A live decision-support dashboard that tells Nigerian importers when it's actually a good day to buy foreign currency — not just what the rate is.**
 
-A business intelligence dashboard helping Nigerian importers decide when 
-to buy foreign currency, powered by a fully automated data pipeline.
+🔗 **Live demo:** [nigeria-market-intelligence.streamlit.app](https://nigeria-market-intelligence.streamlit.app/)
+
+---
 
 ## The Problem
 
-Nigerian businesses that import goods and pay foreign suppliers in USD, 
-EUR, or GBP are exposed to daily currency volatility. A business owner 
-paying a $10,000 supplier invoice on the wrong day can lose hundreds of 
-thousands of naira compared to paying just a week earlier or later — 
-often without realizing it.
+Nigerian importers who pay suppliers in USD, EUR, or GBP face a constant question: *is today a good day to convert Naira, or should I wait?* Raw exchange rate numbers don't answer that — you need context: is today's rate high or low compared to the recent trend? Is the Naira strengthening or weakening? What would this payment have cost a week ago?
 
-Most business owners have no easy way to track these trends or know 
-whether today is a good day to convert Naira to foreign currency.
+This dashboard turns raw daily exchange rate data into a direct recommendation, backed by the numbers behind it.
 
 ## What It Does
 
-- Tracks live NGN exchange rates against USD, EUR, and GBP
-- Automatically collects new data every day with zero manual intervention
-- Gives a plain-English recommendation: buy today, or wait?
-- Calculates exactly how much a supplier payment will cost in Naira, 
-  and compares it to costs from previous days
-- Shows historical trends and identifies the cheapest days to convert 
-  currency
-- Includes a confidence score based on recent rate movement
+- **Live buy/wait recommendation** — compares today's rate to the 30-day average and gives a clear ✅/⚠️ verdict, with a confidence level based on the last 7 days of momentum.
+- **Interactive time range filter** — view trends over 7 days, 30 days, 90 days, or 1 year; the chart, average line, and insights all update to match.
+- **Import cost calculator** — enter a payment amount in USD/EUR/GBP and see exactly what it costs in Naira today vs. 7 days ago.
+- **Automated business insights** — plain-language callouts like *"today's rate is the lowest in the last 90 days"* or *"importing is 2% more expensive than last week."*
+- **Fully automated data pipeline** — a scheduled job fetches fresh rates daily, cleans and stores them, and redeploys the live dashboard with zero manual intervention.
 
 ## Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| Python + Pandas | Data cleaning & analysis |
-| SQLite (SQL) | Local data storage & querying |
-| Streamlit | Live interactive dashboard |
-| ExchangeRate-API | Live data source |
-| Matplotlib | Visualisation |
-| GitHub Actions | Automated daily data collection |
+| Layer | Tools |
+|---|---|
+| Data pipeline | Python, GitHub Actions (scheduled daily fetch) |
+| Data processing | Pandas |
+| Storage | JSON (raw) → processed dataframe |
+| Visualization | Matplotlib |
+| Web app / UI | Streamlit |
+| Deployment | Streamlit Community Cloud |
 
-## How It Works
+## Screenshots
 
-**Data Collection**  
-A GitHub Actions workflow runs every day at 7am UTC, calling the 
-ExchangeRate-API and saving the raw response as a JSON file. Nothing 
-is ever deleted — every day's raw data is kept as a permanent record.
+**Dashboard overview & key metrics**
+![Dashboard overview](screenshots/overview.png)
 
-**Processing**  
-The raw JSON files are cleaned and transformed with Pandas — calculating 
-daily percentage changes, 7-day rolling averages, and converting rates 
-into an NGN-per-unit format that's easier for Nigerians to read.
+**Buy/wait decision card**
+![Decision card](screenshots/decision-card.png)
 
-**Analysis & Decision Logic**  
-The dashboard compares today's rate against the 30-day average and 
-recent trend direction to generate a simple recommendation: is today 
-a good day to buy foreign currency, or should you wait?
+**Interactive historical chart with time range filter**
+![Historical chart](screenshots/chart-filter.png)
 
-**Visualization**  
-An interactive Streamlit dashboard displays the current rate, historical 
-trends, and a supplier payment cost calculator — all built to be 
-understood in under 30 seconds by someone with no data background.
+**Import cost calculator**
+![Import calculator](screenshots/calculator.png)
 
-## Key Insights
-
-Based on data collected since June 2026:
-
-- The Naira has ranged between ₦1,357 and ₦1,382 per USD
-- The most volatile single-day movement recorded was a 0.59% swing
-- Monthly averages show a gradual weakening trend from June to July
-- A $10,000 supplier payment can vary by over ₦100,000 depending on 
-  timing alone
-
-## Run It Yourself
+## Running It Locally
 
 ```bash
-# Install dependencies
+git clone https://github.com/Mr-Martynz/nigeria-market-intelligence.git
+cd nigeria-market-intelligence
+python -m venv venv
+venv\Scripts\Activate.ps1   # Windows PowerShell
 pip install -r requirements.txt
-
-# Add your API key to a .env file
-# EXCHANGE_API_KEY=your_key_here
-
-# Run the data pipeline
-python src/fetch_data.py
-python src/clean_data.py
-python src/database.py
-
-# Launch the dashboard
 streamlit run app.py
 ```
 
-## Roadmap
+You'll need an API key from [exchangerate-api.com](https://www.exchangerate-api.com/) (free tier works) set as an environment variable or GitHub secret named `EXCHANGE_API_KEY` for the data pipeline to fetch live rates.
 
-- [x] Automated daily data collection via GitHub Actions
-- [x] SQL-based local data storage and analysis
-- [x] Live Streamlit dashboard with decision logic
-- [x] Deployed to Streamlit Community Cloud
-- [ ] Migrate to Supabase/PostgreSQL for faster cloud performance
-- [ ] Add currency rate alerts (email/WhatsApp)
-- [ ] Add supplier payment planning tool
-- [ ] Add GHS and ZAR currency support
+## How the Automation Works
 
-## Author
+A GitHub Actions workflow (`.github/workflows/daily_fetch.yml`) runs every morning on a schedule. It:
+1. Fetches the latest conversion rates from the exchange rate API.
+2. Cleans and processes the data.
+3. Commits the new data back to the repo.
+4. Pings the live Streamlit app to keep it awake.
 
-Built by [@Mr-Martynz](https://github.com/Mr-Martynz)
+No manual updates needed — the dashboard stays current on its own.
+
+## Future Improvements
+
+- [ ] Email/SMS alerts when the rate hits a user-defined threshold
+- [ ] Add more currencies (e.g. CNY, CAD)
+- [ ] Historical data export (CSV download button)
+- [ ] Predictive short-term rate trend (simple time-series forecasting)
+
+## About This Project
+
+Built as part of a portfolio demonstrating end-to-end data pipeline design, automation, and product-focused dashboard development — from raw API data to a polished, business-oriented decision tool.
+
+---
+
+*Questions or interested in similar work? Feel free to reach out via [GitHub](https://github.com/Mr-Martynz) or open an issue on this repo.*
