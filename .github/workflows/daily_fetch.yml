@@ -37,5 +37,4 @@ jobs:
           git add data/
           git diff --staged --quiet || git commit -m "auto: daily fetch $(date +%Y-%m-%d)"
           git push origin master
-      - name: Keep Streamlit app awake
-        run: curl --max-time 30 https://nigeria-market-intelligence.streamlit.app/ || true
+      
