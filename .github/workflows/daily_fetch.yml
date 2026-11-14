@@ -30,6 +30,8 @@ jobs:
         run: python src/clean_data.py
       - name: Store in database
         run: python src/database.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Commit and push new data
         run: |
           git config user.email "action@github.com"
@@ -37,4 +39,3 @@ jobs:
           git add data/
           git diff --staged --quiet || git commit -m "auto: daily fetch $(date +%Y-%m-%d)"
           git push origin master
-      
